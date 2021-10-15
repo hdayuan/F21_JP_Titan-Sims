@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append('/u/hdyuan/bin')
+
 import rebound
 import reboundx
 import numpy as np
