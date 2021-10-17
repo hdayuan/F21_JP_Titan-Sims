@@ -1,4 +1,4 @@
-"""Description: 
+"""Description:
 Takes 4 command line arguments: number of samples, total simulation time
 in years, initial semi-major axis of titan in Saturn radii, and timescale
 for Titan's migration. Prints these four parameters in the order above,
@@ -6,7 +6,7 @@ then calls main() (see below for description of main()). Finally, prints out
 total time for the program to run."""
 
 import sys
-# sys.path.append('/u/hdyuan/bin')
+sys.path.append('/u/hdyuan/bin')
 
 """ TO-DO:
 - Plot expected precession period
