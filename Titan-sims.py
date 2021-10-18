@@ -51,7 +51,7 @@ def main(numSamples, totalSimTime, ia_titan, timescale):
     # Calculate the expected semi-major axis of Titan at which
     # evection resonance should occur given i = e = 0
     # in units of saturn radii
-    exp_aRes = np.power((9/4)*j2Sat*j2Sat*mSat*(aSat/rSat)**3, (1/7))
+    exp_aRes = np.power((9./4.)*j2Sat*j2Sat*mSat*(aSat/rSat)**3, (1./7.))
 
     # calculate period of Titan in years at evection resonance
     # distance ** Check accuracy **
@@ -62,7 +62,7 @@ def main(numSamples, totalSimTime, ia_titan, timescale):
     sim = rebound.Simulation()
     sim.units = ('AU', 'yr', 'Msun')
     sim.integrator = "whfast"
-    sim.dt = (1/20) * tauTitan # time step = 1/20 * shortest orbital period
+    sim.dt = (1./20.) * tauTitan # time step = 1/20 * shortest orbital period
 
     # add Saturn
     sim.add(m=mSat)
@@ -99,10 +99,8 @@ def main(numSamples, totalSimTime, ia_titan, timescale):
     # Integrate
     for i in range(numSamples):
         sim.integrate(i * plotDT)
-        print(sim.particles[1].a / rSat)
-        print(sim.particles[1].e)
+        print(str(sim.particles[1].a/rSat)+"\t"+str(sim.particles[1].e)+"\t"+str(sim.t))
         # print(sim.particles[1].pomega)
-        print(sim.t)
 
     # sim.move_to_hel()
 
