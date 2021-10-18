@@ -97,7 +97,7 @@ def main(numSamples, totalSimTime, ia_titan, timescale):
     plotDT = totalSimTime/numSamples
 
     # Integrate
-    for i in range(0,numSamples):
+    for i in range(numSamples):
         sim.integrate(i * plotDT)
         print(sim.particles[1].a / rSat)
         print(sim.particles[1].e)
