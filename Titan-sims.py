@@ -5,17 +5,14 @@ for Titan's migration. Prints these four parameters in the order above,
 then calls main() (see below for description of main()). Finally, prints out
 total time for the program to run."""
 
-import sys
-sys.path.append('/u/hdyuan/bin')
-
 """ TO-DO:
 - Plot expected precession period
 """
 
+import sys
 import rebound
 import reboundx
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 
 
