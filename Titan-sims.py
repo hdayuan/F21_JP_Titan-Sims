@@ -106,7 +106,7 @@ start_time = time.time()
 # Parse command-line arguments
 numSamples = int(sys.argv[1])
 ia_titan = float(sys.argv[2])
-fa_titan = float(sys.argv[4])
+fa_titan = float(sys.argv[3])
 
 # open file
 f = open("output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
@@ -121,8 +121,8 @@ main(numSamples, ia_titan, fa_titan, f)
 
 # Write running time
 totTimeSec = time.time() - start_time
-numHours = int(totTimeSec) / 3600
-numMins = int(totTimeSec % 3600) / 60
+numHours = int(totTimeSec) // 3600
+numMins = int(totTimeSec % 3600) // 60
 numSecs = (totTimeSec % 3600) % 60
 f.write("Running time: "+str(numHours)+ " hours "+str(numMins)+" minutes "+str(numSecs)+" seconds.\n")
 
