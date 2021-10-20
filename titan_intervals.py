@@ -1,9 +1,13 @@
 """Description:
-Takes 3 command line arguments: number of samples, initial and 
-final semi-major axes of titan in Saturn radii
-Prints these four parameters in the order above,
+Takes 4 command line arguments: number of samples, total simulation time
+in years, initial semi-major axis of titan in Saturn radii, and timescale
+for Titan's migration. Prints these four parameters in the order above,
 then calls main() (see below for description of main()). Finally, prints out
 total time for the program to run."""
+
+""" TO-DO:
+- Plot expected precession period
+"""
 
 import sys
 import rebound
@@ -12,17 +16,21 @@ import numpy as np
 import time
 
 
-"""4 parameters: numSamples is number of samples over integration, 
-ia_titan and fa_titan are initial and final semi-major axes of Titan 
-in Saturn radii respectively, file is the file to which output
+"""5 parameters: numSamples is number of samples over integration, 
+totalSimTime is total time of simulation in years, ia_titan is initial
+semi-major axis of Titan in Saturn radii, timescale is the timescale (tau)
+for the migration of Titan's semi-major axis, file is file to which output
 is written
 
-Integrates the system from a = ia_titan to a = fa_titan and prints 
-numSamples data points, each on one line in the following format: 
+Integrates the system for totalSimTime years and prints numSamples
+data points, each in the following order: 
+    semi-major axis in Saturn radii
+    eccentricity
+    current time
 
-'semi-major axis in Saturn radii'[tab]'eccentricity'[tab]'current time'
+If timescale is 0, calculates correct timescale
 """
-def main(numSamples, ia_titanRS, fa_titanRS, file):
+def main(numSamples, totalSimTime, ia_titan, file):
 
     # Constants
     G = 6.67e-11 # G in SI units ****
@@ -39,16 +47,16 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     mTitan = 0.0000000676319759 # mass of titan in solar masses
     eTitan = 0.001 # eccentricity of Titan's orbit ***** Modify as needed *****
 
-    ia_titanAU = ia_titanRS * rSat  # starting semi-major axis of Titan
+    ini_aTitan = ia_titan * rSat  # starting semi-major axis of Titan
 
     # Calculate the expected semi-major axis of Titan at which
     # evection resonance should occur given i = e = 0
     # in units of saturn radii
-    exp_aResRS = np.power((9./4.)*j2Sat*j2Sat*mSat*(aSat/rSat)**3, (1./7.))
+    exp_aRes = np.power((9./4.)*j2Sat*j2Sat*mSat*(aSat/rSat)**3, (1./7.))
 
     # calculate period of Titan in years at evection resonance
     # distance ** Check accuracy **
-    mm = np.sqrt(G*mSat*mSun / ((exp_aResRS*rSat*AU_TO_M)**3))  # in rad / sec
+    mm = np.sqrt(G*mSat*mSun / ((exp_aRes*rSat*AU_TO_M)**3))  # in rad / sec
     tauTitan = 2*np.pi*(1/mm)/(3600*24*365.25) # in years
 
     # Initialize rebound simulation
@@ -61,7 +69,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     sim.add(m=mSat)
 
     # add Titan
-    sim.add(m=mTitan, a=ia_titanAU, e=eTitan)
+    sim.add(m=mTitan, a=ini_aTitan, e=eTitan)
 
     # add sun (with semi-major axis and eccentricity of Saturn)
     sim.add(m=1, a=aSat, e=eSat)
@@ -71,16 +79,12 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
 
     # Calculate timescale for exponential migration of Titan's semi-major axis
     ageSat = 4.503e9 # age of saturn in yrs
-    timescale = 3 * ((exp_aResRS*rSat/curr_aTitan)**3) * ageSat
-
-    # calculate total time to integrate based on ia_titan, fa_titan, tau, and
-    # given exponential migration of form a = a_0 * e^(t/tau)
-    totSimTime = timescale * np.log(fa_titanRS / ia_titanRS) 
+    tau = 3 * ((exp_aRes*rSat/curr_aTitan)**3) * ageSat
 
     # Add migration force for Titan's outward migration (a = a0e^(t/tau)
     mof = rebx.load_force("modify_orbits_forces")
     rebx.add_force(mof)
-    sim.particles[1].params["tau_a"] = timescale
+    sim.particles[1].params["tau_a"] = tau
 
     # add Saturn's J2
     gh = rebx.load_force("gravitational_harmonics")
@@ -88,43 +92,40 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     sim.particles[0].params["J2"] = j2Sat
     sim.particles[0].params["R_eq"] = rSat
 
-    plotDT = totSimTime/numSamples
+    plotDT = totalSimTime/numSamples
 
-    # Integrate
+    # Integrate and find eMax
+    eMax = 0
     for i in range(numSamples):
         sim.integrate(i * plotDT)
-        file.write(str(sim.particles[1].a/rSat)+"\t"+str(sim.particles[1].e)+"\t"+str(sim.t)+"\n")
-        # print(sim.particles[1].pomega)
+        if sim.particles[1].e > eMax:
+            eMax = sim.particles[1].e
+
+    file.write(str(eMax)+"\n")
 
     # sim.move_to_hel()
 
 
 
-# start timer
+
 start_time = time.time()
 
-# Parse command-line arguments
 numSamples = int(sys.argv[1])
-ia_titan = float(sys.argv[2])
-fa_titan = float(sys.argv[4])
+intSimTime = int(sys.argv[2])
+ia_titan = float(sys.argv[3])
+timescale = int(sys.argv[4])
 
 # open file
-f = open("output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
+f = open("output.txt", "a")
 
-# Write parameters of simulation
+# Print parameters of simulation
 f.write(str(numSamples)+"\n")
+f.write(str(totalSimTime)+"\n")
 f.write(str(ia_titan)+"\n")
-f.write(str(fa_titan)+"\n")
+f.write(str(timescale)+"\n")
 
-# call main
-main(numSamples, ia_titan, fa_titan, f)
-
-# Write running time
-totTimeSec = time.time() - start_time
-numHours = int(totTimeSec) / 3600
-numMins = int(totTimeSec % 3600) / 60
-numSecs = (totTimeSec % 3600) % 60
-f.write("Running time: "+str(numHours)+ " hours "+str(numMins)+" minutes "+str(numSecs)+" seconds.\n")
+main(numSamples, totalSimTime, ia_titan, timescale, f)
+f.write(str(time.time() - start_time) + " seconds\n")
 
 # close the file
 f.close()
