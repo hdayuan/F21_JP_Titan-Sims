@@ -16,10 +16,11 @@ import numpy as np
 import time
 
 
-"""4 parameters: numSamples is number of samples over integration, 
+"""5 parameters: numSamples is number of samples over integration, 
 totalSimTime is total time of simulation in years, ia_titan is initial
 semi-major axis of Titan in Saturn radii, timescale is the timescale (tau)
-for the migration of Titan's semi-major axis
+for the migration of Titan's semi-major axis, file is file to which output
+is written
 
 Integrates the system for totalSimTime years and prints numSamples
 data points, each in the following order: 
@@ -29,7 +30,7 @@ data points, each in the following order:
 
 If timescale is 0, calculates correct timescale
 """
-def main(numSamples, totalSimTime, ia_titan, timescale):
+def main(numSamples, totalSimTime, ia_titan, timescale, file):
 
     # Constants
     G = 6.67e-11 # G in SI units ****
@@ -99,7 +100,7 @@ def main(numSamples, totalSimTime, ia_titan, timescale):
     # Integrate
     for i in range(numSamples):
         sim.integrate(i * plotDT)
-        print(str(sim.particles[1].a/rSat)+"\t"+str(sim.particles[1].e)+"\t"+str(sim.t))
+        file.write(str(sim.particles[1].a/rSat)+"\t"+str(sim.particles[1].e)+"\t"+str(sim.t)+"\n")
         # print(sim.particles[1].pomega)
 
     # sim.move_to_hel()
@@ -114,11 +115,17 @@ totalSimTime = int(sys.argv[2])
 ia_titan = float(sys.argv[3])
 timescale = int(sys.argv[4])
 
-# Print parameters of simulation
-print(numSamples)
-print(totalSimTime)
-print(ia_titan)
-print(timescale)
+# open file
+f = open("output.txt", "a")
 
-main(numSamples, totalSimTime, ia_titan, timescale)
-print(str(time.time() - start_time) + " seconds")
+# Print parameters of simulation
+f.write(str(numSamples)+"\n")
+f.write(str(totalSimTime)+"\n")
+f.write(str(ia_titan)+"\n")
+f.write(str(timescale)+"\n")
+
+main(numSamples, totalSimTime, ia_titan, timescale, f)
+f.write(str(time.time() - start_time) + " seconds\n")
+
+# close the file
+f.close()
