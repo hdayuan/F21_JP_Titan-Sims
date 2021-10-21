@@ -20,7 +20,8 @@ is written
 Integrates the system from a = ia_titan to a = fa_titan and prints 
 numSamples data points, each on one line in the following format: 
 
-'semi-major axis in Saturn radii'[tab]'eccentricity'[tab]'current time'
+'semi-major axis in Saturn radii'[tab]'eccentricity'[tab]'longitude of pericenter'
+[tab]'mean anomaly of Sun's "orbit" around Saturn'[tab]'current time in simulation'
 """
 def main(numSamples, ia_titanRS, fa_titanRS, file):
 
@@ -58,13 +59,13 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     sim.dt = (1./20.) * tauTitan # time step = 1/20 * shortest orbital period
 
     # add Saturn
-    sim.add(m=mSat)
+    sim.add(m=mSat, hash = "Saturn")
 
     # add Titan
-    sim.add(m=mTitan, a=ia_titanAU, e=eTitan)
+    sim.add(m=mTitan, a=ia_titanAU, e=eTitan, hash = "Titan")
 
     # add sun (with semi-major axis and eccentricity of Saturn)
-    sim.add(m=1, a=aSat, e=eSat)
+    sim.add(m=1., a=aSat, e=eSat, hash = "Sun")
 
     # Initiate reboundx
     rebx = reboundx.Extras(sim)
@@ -80,23 +81,27 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     # Add migration force for Titan's outward migration (a = a0e^(t/tau)
     mof = rebx.load_force("modify_orbits_forces")
     rebx.add_force(mof)
-    sim.particles[1].params["tau_a"] = timescale
+    sim.particles["Titan"].params["tau_a"] = timescale
 
     # add Saturn's J2
     gh = rebx.load_force("gravitational_harmonics")
     rebx.add_force(gh)
-    sim.particles[0].params["J2"] = j2Sat
-    sim.particles[0].params["R_eq"] = rSat
+    sim.particles["Saturn"].params["J2"] = j2Sat
+    sim.particles["Saturn"].params["R_eq"] = rSat
 
     plotDT = totSimTime/numSamples
 
     # Integrate
     for i in range(numSamples):
         sim.integrate(i * plotDT)
-        file.write(str(sim.particles[1].a/rSat)+"\t"+str(sim.particles[1].e)+"\t"+str(sim.t)+"\n")
-        # print(sim.particles[1].pomega)
+        # move to Saturn's frame of reference
+        sim.move_to_hel()
+        # write output
+        file.write(str(sim.particles["Titan"].a/rSat)+"\t"+str(sim.particles["Titan"].e)+"\t")
+        file.write(str(sim.particles["Titan"].pomega)+"\t"+str(sim.particles["Sun"].l))
+        file.write("\t"+str(sim.t)+"\n")
 
-    # sim.move_to_hel()
+    # sim.cite()
 
 
 
@@ -109,7 +114,7 @@ ia_titan = float(sys.argv[2])
 fa_titan = float(sys.argv[3])
 
 # open file
-f = open("output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
+f = open("v2-output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
 
 # Write parameters of simulation
 f.write(str(numSamples)+"\n")
