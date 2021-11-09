@@ -23,12 +23,15 @@ def heartbeat(sim_pointer):
     rTitan = 0.04421567543 * rSat # radius of Titan in AU
     QTitan = 100. # tidal Q factor for Titan
 
+    sim = sim_pointer.contents
+    sim.move_to_hel()
+
     GMTitan = G*mTitan*mSun
     GMSat = G*mSat*mSun
-    T_Titan_temp = (2*np.sqrt(GMSat/((rSat*AU_TO_M)**3))*QTitan*(rTitan*rSat*AU_TO_M)**3)/(GMTitan)
-    a = sim_pointer.particles["Titan"].a
-    T_Titan = T_Titan_temp * np.sqrt(1./(a**3))
-    sim_pointer.particles["Titan"].params["tctl_tau"] = T_Titan
+    T_Titan_temp = (2*QTitan*(rTitan*rSat*AU_TO_M)**3)/(GMTitan)
+    nTitan = sim.particles["Titan"].n
+    T_Titan = T_Titan_temp * nTitan
+    sim.particles["Titan"].params["tctl_tau"] = T_Titan
 
 
 """4 parameters: numSamples is number of samples over integration, 
@@ -144,7 +147,7 @@ ia_titan = float(sys.argv[2])
 fa_titan = float(sys.argv[3])
 
 # open file
-f = open("v2-output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
+f = open("v2-output-tides-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
 
 # Write parameters of simulation
 f.write(str(numSamples)+"\n")
