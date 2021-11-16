@@ -29,18 +29,22 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     G = 6.67e-11 # G in SI units ****
     mSun = 1.9891e30 # mass of sun in kg ****
     AU_TO_M = 1.496e+11 # meters in one AU
+    YR_TO_SEC = 365.25*24.*3600. # seconds in a year
 
     # Check accuracy of all the following constants
     mSat = 0.0002857 # mass of saturn in solar masses
     aSat = 9.5549 # semi-major axis of Saturn's orbit in AU
     eSat = 0.0565 # eccentricity of Saturn
     rSat = 0.00038926024 # radius of Saturn in AU
+    oSat = 26.7 * np.pi / 180. # obliquity of Saturn in radians
     j2Sat = 16298e-6 # J2 of Saturn (Murray and Dermott p 531) 
+    QSat = 5000. # Tidal Q factor of Saturn (Lainey et al.)
+    k2Sat = 0.39 # Love number of Saturn *** CHECK THIS ***
     curr_aTitan = 0.008167696467 # modern-day semi-major axis of titan in AU
     mTitan = 0.0000000676319759 # mass of titan in solar masses
     eTitan = 0.001 # initial eccentricity of Titan's orbit ***** Modify as needed *****
     rTitan = 0.04421567543 * rSat # radius of Titan in AU
-    k2Titan = 0.616 # Love number of Titan *** CHECK THIS ***
+    k2Titan = 0.15 # Love number of Titan *** CHECK THIS ***
     QTitan = 100. # Tidal Q factor of Titan
 
     ia_titanAU = ia_titanRS * rSat  # starting semi-major axis of Titan
@@ -67,8 +71,8 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     # add Titan
     sim.add(m=mTitan, a=ia_titanAU, e=eTitan, hash = "Titan")
 
-    # add sun (with semi-major axis and eccentricity of Saturn)
-    sim.add(m=1., a=aSat, e=eSat, hash = "Sun")
+    # add Sun (with semi-major axis and eccentricity of Saturn, inclination = obliquity of Saturn)
+    sim.add(m=1., a=aSat, e=eSat, i=oSat, hash = "Sun")
 
     # Calculate timescale for exponential migration of Titan's semi-major axis
     ageSat = 4.503e9 # age of saturn in yrs
@@ -83,9 +87,9 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     ps = sim.particles
 
     # Add migration force for Titan's outward migration (a = a0e^(t/tau)
-    mof = rebx.load_force("modify_orbits_forces")
-    rebx.add_force(mof)
-    ps["Titan"].params["tau_a"] = timescale
+    # mof = rebx.load_force("modify_orbits_forces")
+    # rebx.add_force(mof)
+    #ps["Titan"].params["tau_a"] = timescale
 
     # add Saturn's J2
     gh = rebx.load_force("gravitational_harmonics")
@@ -98,10 +102,17 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     rebx.add_force(tides)
 
     # Tidal forces of Titan
-    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun)
+    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun*YR_TO_SEC) # in years
     ps["Titan"].r = rTitan # AU
     ps["Titan"].params["tctl_k2"] = k2Titan
-    ps[0].params["tctl_tau"] = titanT
+    ps["Titan"].params["tctl_tau"] = titanT
+
+    # Tidal forces of Saturn
+    nmSat = np.sqrt(G*mSun / ((aSat*AU_TO_M)**3))  # in rad / sec
+    satT = 2*nmSat*QSat*(rSat*AU_TO_M)**3 / (G*mSat*mSun*YR_TO_SEC) # in years
+    ps["Saturn"].r = rSat # AU
+    ps["Saturn"].params["tctl_k2"] = k2Sat
+    ps["Saturn"].params["tctl_tau"] = satT
 
     plotDT = totSimTime/numSamples
 
