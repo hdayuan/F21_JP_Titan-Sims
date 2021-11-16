@@ -72,7 +72,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     sim.add(m=mTitan, a=ia_titanAU, e=eTitan, hash = "Titan")
 
     # add Sun (with semi-major axis and eccentricity of Saturn, inclination = obliquity of Saturn)
-    sim.add(m=1., a=aSat, e=eSat, i=oSat, hash = "Sun")
+    sim.add(m=1., a=aSat, e=eSat, inc=oSat, hash = "Sun")
 
     # Calculate timescale for exponential migration of Titan's semi-major axis
     ageSat = 4.503e9 # age of saturn in yrs
