@@ -127,7 +127,7 @@ ia_titan = float(sys.argv[2])
 fa_titan = float(sys.argv[3])
 
 # open file
-f = open("v2-output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
+f = open("v2-output-tides-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
 
 # Write parameters of simulation
 f.write(str(numSamples)+"\n")
