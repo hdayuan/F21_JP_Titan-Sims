@@ -11,25 +11,6 @@ import reboundx
 import numpy as np
 import time
 
-"""Recalculates the constant time lag of tidal forces at every timestep"""
-def heartbeat(sim_pointer):
-    # Constants
-    G = 6.67e-11 # G in SI units ****
-    mSun = 1.9891e30 # mass of sun in kg ****
-    AU_TO_M = 1.496e+11 # meters in one AU
-    mSat = 0.0002857 # mass of saturn in solar masses
-    rSat = 0.00038926024 # radius of Saturn in AU
-    mTitan = 0.0000000676319759 # mass of titan in solar masses
-    rTitan = 0.04421567543 * rSat # radius of Titan in AU
-    QTitan = 100. # tidal Q factor for Titan
-
-    GMTitan = G*mTitan*mSun
-    GMSat = G*mSat*mSun
-    T_Titan_temp = (2*np.sqrt(GMSat/((rSat*AU_TO_M)**3))*QTitan*(rTitan*rSat*AU_TO_M)**3)/(GMTitan)
-    a = sim_pointer.particles["Titan"].a
-    T_Titan = T_Titan_temp * np.sqrt(1./(a**3))
-    sim_pointer.particles["Titan"].params["tctl_tau"] = T_Titan
-
 
 """4 parameters: numSamples is number of samples over integration, 
 ia_titan and fa_titan are initial and final semi-major axes of Titan 
@@ -60,6 +41,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     eTitan = 0.001 # initial eccentricity of Titan's orbit ***** Modify as needed *****
     rTitan = 0.04421567543 * rSat # radius of Titan in AU
     k2Titan = 0.616 # Love number of Titan *** CHECK THIS ***
+    QTitan = 100. # Tidal Q factor of Titan
 
     ia_titanAU = ia_titanRS * rSat  # starting semi-major axis of Titan
 
@@ -77,7 +59,6 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     sim = rebound.Simulation()
     sim.units = ('AU', 'yr', 'Msun')
     sim.integrator = "whfast"
-    sim.heartbeat = heartbeat
     sim.dt = (1./20.) * tauTitan # time step = 1/20 * shortest orbital period
 
     # add Saturn
@@ -117,8 +98,10 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     rebx.add_force(tides)
 
     # Tidal forces of Titan
+    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun)
     ps["Titan"].r = rTitan # AU
     ps["Titan"].params["tctl_k2"] = k2Titan
+    ps[0].params["tctl_tau"] = titanT
 
     plotDT = totSimTime/numSamples
 
