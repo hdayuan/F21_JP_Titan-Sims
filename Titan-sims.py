@@ -57,7 +57,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     # calculate period of Titan in years at evection resonance
     # distance ** Check accuracy **
     mm = np.sqrt(G*mSat*mSun / ((exp_aResRS*rSat*AU_TO_M)**3))  # in rad / sec
-    tauTitan = 2*np.pi*(1/mm)/(3600*24*365.25) # in years
+    tauTitan = 2*np.pi*(1/mm)/YR_TO_SEC # in years
 
     # Initialize rebound simulation
     sim = rebound.Simulation()
