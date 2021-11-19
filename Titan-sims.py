@@ -72,7 +72,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     sim.add(m=mTitan, a=ia_titanAU, e=eTitan, hash = "Titan")
 
     # add Sun (with semi-major axis and eccentricity of Saturn, inclination = obliquity of Saturn)
-    sim.add(m=1., a=aSat, e=eSat, inc=oSat, hash = "Sun")
+    sim.add(m=1., a=aSat, e=eSat, hash = "Sun")
 
     # Calculate timescale for exponential migration of Titan's semi-major axis
     ageSat = 4.503e9 # age of saturn in yrs
@@ -102,17 +102,19 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     rebx.add_force(tides)
 
     # Tidal forces of Titan
-    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun*YR_TO_SEC) # in years
+    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun) # in seconds
     ps["Titan"].r = rTitan # AU
     ps["Titan"].params["tctl_k2"] = k2Titan
     ps["Titan"].params["tctl_tau"] = titanT
+    ps["Titan"].params["Omega"] = mm # in radians per sec
 
     # Tidal forces of Saturn
     nmSat = np.sqrt(G*mSun / ((aSat*AU_TO_M)**3))  # in rad / sec
-    satT = 2*nmSat*QSat*(rSat*AU_TO_M)**3 / (G*mSat*mSun*YR_TO_SEC) # in years
+    satT = 2*nmSat*QSat*(rSat*AU_TO_M)**3 / (G*mSat*mSun) # in seconds
     ps["Saturn"].r = rSat # AU
     ps["Saturn"].params["tctl_k2"] = k2Sat
     ps["Saturn"].params["tctl_tau"] = satT
+    ps["Saturn"].params["Omega"] = 2*np.pi/(10.656*3600) # in rad per sec
 
     plotDT = totSimTime/numSamples
 
