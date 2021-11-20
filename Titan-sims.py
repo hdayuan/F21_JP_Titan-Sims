@@ -1,5 +1,11 @@
 """Description:
-Takes 3 command line arguments: number of samples, initial and 
+
+To run:
+
+python3 Titan-sims.py [number of samples] [initial a in Saturn radii]
+[target final a in Saturn radii]
+
+Takes 3 command line arguments: number of samples, initial and
 final semi-major axes of titan in Saturn radii
 Prints these four parameters in the order above,
 then calls main() (see below for description of main()). Finally, prints out
@@ -12,13 +18,13 @@ import numpy as np
 import time
 
 
-"""4 parameters: numSamples is number of samples over integration, 
-ia_titan and fa_titan are initial and final semi-major axes of Titan 
+"""4 parameters: numSamples is number of samples over integration,
+ia_titan and fa_titan are initial and final semi-major axes of Titan
 in Saturn radii respectively, file is the file to which output
 is written
 
-Integrates the system from a = ia_titan to a = fa_titan and prints 
-numSamples data points, each on one line in the following format: 
+Integrates the system from a = ia_titan to a = fa_titan and prints
+numSamples data points, each on one line in the following format:
 
 'semi-major axis in Saturn radii'[tab]'eccentricity'[tab]'longitude of pericenter'
 [tab]'mean anomaly of Sun's "orbit" around Saturn'[tab]'current time in simulation'
@@ -37,7 +43,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     eSat = 0.0565 # eccentricity of Saturn
     rSat = 0.00038926024 # radius of Saturn in AU
     oSat = 26.7 * np.pi / 180. # obliquity of Saturn in radians
-    j2Sat = 16298e-6 # J2 of Saturn (Murray and Dermott p 531) 
+    j2Sat = 16298e-6 # J2 of Saturn (Murray and Dermott p 531)
     QSat = 5000. # Tidal Q factor of Saturn (Lainey et al.)
     k2Sat = 0.39 # Love number of Saturn *** CHECK THIS ***
     curr_aTitan = 0.008167696467 # modern-day semi-major axis of titan in AU
@@ -80,7 +86,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
 
     # calculate total time to integrate based on ia_titan, fa_titan, tau, and
     # given exponential migration of form a = a_0 * e^(t/tau)
-    totSimTime = timescale * np.log(fa_titanRS / ia_titanRS) 
+    totSimTime = timescale * np.log(fa_titanRS / ia_titanRS)
 
     # Initiate reboundx
     rebx = reboundx.Extras(sim)
@@ -102,19 +108,21 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     rebx.add_force(tides)
 
     # Tidal forces of Titan
-    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun) # in seconds
+    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun*YR_TO_SEC) # in years
+    print(titanT)
     ps["Titan"].r = rTitan # AU
     ps["Titan"].params["tctl_k2"] = k2Titan
     ps["Titan"].params["tctl_tau"] = titanT
-    ps["Titan"].params["Omega"] = mm # in radians per sec
+    ps["Titan"].params["Omega"] = mm*YR_TO_SEC # in radians per year
 
     # Tidal forces of Saturn
     nmSat = np.sqrt(G*mSun / ((aSat*AU_TO_M)**3))  # in rad / sec
-    satT = 2*nmSat*QSat*(rSat*AU_TO_M)**3 / (G*mSat*mSun) # in seconds
+    satT = 2*nmSat*QSat*(rSat*AU_TO_M)**3 / (G*mSat*mSun*YR_TO_SEC) # in years
+    print(satT)
     ps["Saturn"].r = rSat # AU
     ps["Saturn"].params["tctl_k2"] = k2Sat
     ps["Saturn"].params["tctl_tau"] = satT
-    ps["Saturn"].params["Omega"] = 2*np.pi/(10.656*3600) # in rad per sec
+    ps["Saturn"].params["Omega"] = 2*np.pi*YR_TO_SEC/(10.656*3600) # in rad per year
 
     plotDT = totSimTime/numSamples
 
@@ -125,8 +133,9 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
         sim.move_to_hel()
         # write output
         file.write(str(sim.particles["Titan"].a/rSat)+"\t"+str(sim.particles["Titan"].e)+"\t")
-        file.write(str(sim.particles["Titan"].pomega)+"\t"+str(sim.particles["Sun"].l))
-        file.write("\t"+str(sim.t)+"\n")
+        file.write(str(sim.particles["Titan"].pomega)+"\t"+str(sim.particles["Sun"].l)+"\t")
+        file.write(str(sim.particles["Titan"].inc)+"\t")
+        file.write(str(sim.t)+"\n")
 
     # sim.cite()
 
@@ -140,7 +149,7 @@ ia_titan = float(sys.argv[2])
 fa_titan = float(sys.argv[3])
 
 # open file
-f = open("v2-output-tides-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
+f = open("v3-tides-output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
 
 # Write parameters of simulation
 f.write(str(numSamples)+"\n")
