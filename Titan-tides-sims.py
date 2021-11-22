@@ -44,7 +44,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     rSat = 0.00038926024 # radius of Saturn in AU
     oSat = 26.7 * np.pi / 180. # obliquity of Saturn in radians
     j2Sat = 16298e-6 # J2 of Saturn (Murray and Dermott p 531)
-    QSat = 5000. # Tidal Q factor of Saturn (Lainey et al.)
+    # calculated later # QSat = 5000. # Tidal Q factor of Saturn (Lainey et al.)
     k2Sat = 0.39 # Love number of Saturn *** CHECK THIS ***
     curr_aTitan = 0.008167696467 # modern-day semi-major axis of titan in AU
     mTitan = 0.0000000676319759 # mass of titan in solar masses
@@ -82,7 +82,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
 
     # Calculate timescale for exponential migration of Titan's semi-major axis
     ageSat = 4.503e9 # age of saturn in yrs
-    timescale = 3 * ((exp_aResRS*rSat/curr_aTitan)**3) * ageSat
+    timescale = 3. * ((exp_aResRS*rSat/curr_aTitan)**3) * ageSat
 
     # calculate total time to integrate based on ia_titan, fa_titan, tau, and
     # given exponential migration of form a = a_0 * e^(t/tau)
@@ -109,7 +109,6 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
 
     # Tidal forces of Titan
     titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun*YR_TO_SEC) # in years
-    print(titanT)
     ps["Titan"].r = rTitan # AU
     ps["Titan"].params["tctl_k2"] = k2Titan
     ps["Titan"].params["tctl_tau"] = titanT
@@ -117,8 +116,10 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
 
     # Tidal forces of Saturn
     nmSat = np.sqrt(G*mSun / ((aSat*AU_TO_M)**3))  # in rad / sec
+    QSat = 3*k2Sat*(mTitan/mSat)*mm*(timescale/3.)*(1.0/exp_aResRS)**5.
+    # Q for Saturn (timescale divided by 3 to get t_tide??)
+
     satT = 2*nmSat*QSat*(rSat*AU_TO_M)**3 / (G*mSat*mSun*YR_TO_SEC) # in years
-    print(satT)
     ps["Saturn"].r = rSat # AU
     ps["Saturn"].params["tctl_k2"] = k2Sat
     ps["Saturn"].params["tctl_tau"] = satT
@@ -138,7 +139,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
         file.write(str(sim.t)+"\n")
 
     # sim.cite()
-
+    return totSimTime
 
 # start timer
 start_time = time.time()
@@ -149,7 +150,7 @@ ia_titan = float(sys.argv[2])
 fa_titan = float(sys.argv[3])
 
 # open file
-f = open("v3-tides-output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
+f = open("v4out-tides-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
 
 # Write parameters of simulation
 f.write(str(numSamples)+"\n")
@@ -157,7 +158,10 @@ f.write(str(ia_titan)+"\n")
 f.write(str(fa_titan)+"\n")
 
 # call main
-main(numSamples, ia_titan, fa_titan, f)
+totSimTime = main(numSamples, ia_titan, fa_titan, f)
+
+# Write total sim time
+f.write("Total Integration Time: "+str(totSimTime)+" years.\n")
 
 # Write running time
 totTimeSec = time.time() - start_time

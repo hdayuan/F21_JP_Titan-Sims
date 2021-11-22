@@ -1,11 +1,17 @@
 """Description:
+
+To run:
+
+python3 Titan-tau-incl.py [num samples] [initial a] [target final a] 
+[div factor]
+
 ***Does not include tides.***
 Takes 4 command line arguments: number of samples, initial and 
 final semi-major axes of titan in Saturn radii, and factor to divide
 timescale by
 Prints these four parameters in the order above,
-then calls main() (see below for description of main()). Finally, prints out
-total time for the program to run."""
+then calls main() (see below for description of main()). Finally, prints total
+integration time and total time for the program to run."""
 
 import sys
 import rebound
@@ -25,6 +31,8 @@ numSamples data points, each on one line in the following format:
 'semi-major axis in Saturn radii'[tab]'eccentricity'[tab]'longitude of pericenter'
 [tab]'mean anomaly of Sun's "orbit" around Saturn'[tab]'inclination of titan'[tab]
 'current time in simulation'
+
+Returns integration time for simulation
 """
 def main(numSamples, ia_titanRS, fa_titanRS, file, factor):
 
@@ -87,7 +95,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file, factor):
 
     # calculate total time to integrate based on ia_titan, fa_titan, tau, and
     # given exponential migration of form a = a_0 * e^(t/tau)
-    totSimTime = timescale * np.log(fa_titanRS / ia_titanRS) 
+    totSimTime = timescale * np.log(fa_titanRS / ia_titanRS)
 
     # Add migration force for Titan's outward migration (a = a0e^(t/tau)
     mof = rebx.load_force("modify_orbits_forces")
@@ -114,6 +122,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file, factor):
         file.write(str(sim.t)+"\n")
 
     # sim.cite()
+    return totSimTime
 
 
 
@@ -127,7 +136,7 @@ fa_titan = float(sys.argv[3])
 div_factor = float(sys.argv[4])
 
 # open file
-f = open("v2-div"+str(div_factor)+"-output-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
+f = open("v3out-div"+str(div_factor)+"-"+str(numSamples)+"s-"+str(ia_titan)+"to"+str(fa_titan)+"rs.txt", "a")
 
 # Write parameters of simulation
 f.write(str(numSamples)+"\n")
@@ -136,7 +145,10 @@ f.write(str(fa_titan)+"\n")
 f.write(str(div_factor)+"\n")
 
 # call main
-main(numSamples, ia_titan, fa_titan, f, div_factor)
+integTime = main(numSamples, ia_titan, fa_titan, f, div_factor)
+
+# Write integration time
+f.write("Integration time: "+str(integTime)+" years.\n")
 
 # Write running time
 totTimeSec = time.time() - start_time
