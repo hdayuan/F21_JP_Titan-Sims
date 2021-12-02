@@ -1,5 +1,7 @@
 """Description:
 
+Questions: mass (M) and mean motion (n) in T to Q conversion --> check plot timescale too
+
 To run:
 
 python3 Titan-sims.py [number of samples] [initial a in Saturn radii]
@@ -17,6 +19,21 @@ import reboundx
 import numpy as np
 import time
 
+# Global Constants
+G = 6.67e-11 # G in SI units ****
+M_SUN = 1.9891e30 # mass of sun in kg ****
+AU_TO_M = 1.496e+11 # meters in one AU
+YR_TO_SEC = 365.25*24.*3600. # seconds in a year
+
+"""Calculates tidal time-lag T (in years) for a body with mean motion n (radians/sec), 
+tidal Q factor Q, radius r (AU), and mass m (solar masses)"""
+def time_lag(n, Q, r, m):
+    return 2*n*Q*(r*AU_TO_M)**3 / (G*m*M_SUN*YR_TO_SEC)
+
+"""Calculates the mean motion (in radians/sec) of a body orbiting around a central body
+of mass mCentral (solar masses) at semi-major axis a (AU) """
+def mean_motion(mCentral, a):
+    return np.sqrt(G*mCentral*M_SUN / ((a*AU_TO_M)**3))
 
 """4 parameters: numSamples is number of samples over integration,
 ia_titan and fa_titan are initial and final semi-major axes of Titan
@@ -30,12 +47,6 @@ numSamples data points, each on one line in the following format:
 [tab]'mean anomaly of Sun's "orbit" around Saturn'[tab]'current time in simulation'
 """
 def main(numSamples, ia_titanRS, fa_titanRS, file):
-
-    # Constants
-    G = 6.67e-11 # G in SI units ****
-    mSun = 1.9891e30 # mass of sun in kg ****
-    AU_TO_M = 1.496e+11 # meters in one AU
-    YR_TO_SEC = 365.25*24.*3600. # seconds in a year
 
     # Check accuracy of all the following constants
     mSat = 0.0002857 # mass of saturn in solar masses
@@ -62,12 +73,12 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
 
     # calculate period of Titan in years at evection resonance
     # distance ** Check accuracy **
-    mm = np.sqrt(G*mSat*mSun / ((exp_aResRS*rSat*AU_TO_M)**3))  # in rad / sec
-    tauTitan = 2*np.pi*(1/mm)/YR_TO_SEC # in years
+    nTitan = mean_motion(mSat, exp_aResRS*rSat) # in rad / sec
+    tauTitan = 2*np.pi*(1/nTitan)/YR_TO_SEC # in years
 
     # Initialize rebound simulation
     sim = rebound.Simulation()
-    sim.units = ('AU', 'yr', 'Msun')
+    sim.units = ('AU', 'yr', 'M_SUN')
     sim.integrator = "whfast"
     sim.dt = (1./20.) * tauTitan # time step = 1/20 * shortest orbital period
 
@@ -108,18 +119,17 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     rebx.add_force(tides)
 
     # Tidal forces of Titan
-    titanT = 2*mm*QTitan*(rTitan*AU_TO_M)**3 / (G*mTitan*mSun*YR_TO_SEC) # in years
+    titanT = time_lag(nTitan, QTitan, rTitan, mTitan) # in years
     ps["Titan"].r = rTitan # AU
     ps["Titan"].params["tctl_k2"] = k2Titan
     ps["Titan"].params["tctl_tau"] = titanT
-    ps["Titan"].params["Omega"] = mm*YR_TO_SEC # in radians per year
+    ps["Titan"].params["Omega"] = nTitan*YR_TO_SEC # in radians per year
 
     # Tidal forces of Saturn
-    nmSat = np.sqrt(G*mSun / ((aSat*AU_TO_M)**3))  # in rad / sec
-    QSat = 3*k2Sat*(mTitan/mSat)*mm*(timescale/3.)*(1.0/exp_aResRS)**5.
-    # Q for Saturn (timescale divided by 3 to get t_tide??)
+    nSat = mean_motion(1., aSat)  # in rad / sec
+    QSat = 3*k2Sat*(mTitan/mSat)*nTitan*timescale*(1.0/exp_aResRS)**5. # Q for Saturn 
 
-    satT = 2*nmSat*QSat*(rSat*AU_TO_M)**3 / (G*mSat*mSun*YR_TO_SEC) # in years
+    satT = time_lag(nSat, QSat, rSat, mSat) # in years
     ps["Saturn"].r = rSat # AU
     ps["Saturn"].params["tctl_k2"] = k2Sat
     ps["Saturn"].params["tctl_tau"] = satT
