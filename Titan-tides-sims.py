@@ -78,7 +78,7 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
 
     # Initialize rebound simulation
     sim = rebound.Simulation()
-    sim.units = ('AU', 'yr', 'M_SUN')
+    sim.units = ('AU', 'yr', 'MSun')
     sim.integrator = "whfast"
     sim.dt = (1./20.) * tauTitan # time step = 1/20 * shortest orbital period
 
