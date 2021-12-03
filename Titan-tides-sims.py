@@ -133,7 +133,8 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     ps["Saturn"].r = rSat # AU
     ps["Saturn"].params["tctl_k2"] = k2Sat
     ps["Saturn"].params["tctl_tau"] = satT
-    ps["Saturn"].params["Omega"] = 2*np.pi*YR_TO_SEC/(10.656*3600) # in rad per year
+    omega = 2000000*np.pi*YR_TO_SEC/(10.656*3600)
+    ps["Saturn"].params["Omega"] = omega # in rad per year
 
     plotDT = totSimTime/numSamples
 
