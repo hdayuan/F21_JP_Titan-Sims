@@ -129,11 +129,11 @@ def main(numSamples, ia_titanRS, fa_titanRS, file):
     nSat = mean_motion(1., aSat)  # in rad / sec
     QSat = 3*k2Sat*(mTitan/mSat)*nTitan*timescale*(1.0/exp_aResRS)**5. # Q for Saturn 
 
-    satT = time_lag(nSat, QSat, rSat, mSat) # in years
+    satT = time_lag(nTitan, QSat, rSat, mSat) # in years **** nTitan or nSat????? ****
     ps["Saturn"].r = rSat # AU
     ps["Saturn"].params["tctl_k2"] = k2Sat
     ps["Saturn"].params["tctl_tau"] = satT
-    omega = 2000000*np.pi*YR_TO_SEC/(10.656*3600)
+    omega = 2000*np.pi*YR_TO_SEC/(10.656*3600)
     ps["Saturn"].params["Omega"] = omega # in rad per year
 
     plotDT = totSimTime/numSamples
