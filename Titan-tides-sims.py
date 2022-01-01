@@ -1,31 +1,33 @@
 """Description:
 Integrates the Titan-Saturn-Sun system as Titan migrates
 through the evection resonance. Includes Saturn's obliquity and the tidal
-effects on Saturn and Titan, but not on the Sun. Also includes Jupiter which
-causes oscillations in Saturn's eccentricity
-
-TO-DO:
--print exp a res
--Check values of k2 for Saturn and Titan
--how to set inclination of Jupiter?
--use different equatorial radius for Saturn?
--figure out how to save simulations so that I can pick up where
-the last one left off
--figure out how sim.cite() works and whether to use it
--see JPNotes doc and JP_introduction doc for other questions/to-dos
+effects on Saturn and Titan, but not on the Sun.
 
 To run:
 
-python3 Titan-sims.py [number of samples] [initial a] [total integration time]
+python3 Titan-tides-sims.py [continuation?] [initial a] [number of samples]
+[total integration time] {[number of additional samples]
+[additional integration time]}
 
-Takes 3 command line arguments: number of samples, initial semi-major axis of 
-Titan in Saturn radii, and total simulation time in in millions of years
+Takes 4-6 command line arguments: continuation is 0 if new sim,
+1 if continuing previous sim, number of samples, initial semi-major axis of 
+Titan in Saturn radii, and total simulation time in millions of years, {number
+of additional samples, additional integration time in millions of years}
 
 *** Units are AU, yr, and MSun (and SI for other measurements) 
-unless otherwise specified ***"""
+unless otherwise specified ***
+
+TO-DO:
+-Check values of k2 for Saturn and Titan
+-how to set inclination of Jupiter?
+-use different equatorial radius for Saturn?
+-figure out how sim.cite() works and whether to use it
+-see JPNotes doc and JP_introduction doc for other questions/to-dos
+"""
 
 
 import sys
+import os
 import rebound
 import reboundx
 import numpy as np
@@ -74,15 +76,97 @@ def get_timescale(a, aCurr, age):
     return 3. * ((a/aCurr)**3) * age
 
 
+"""Creates a new file for a new simulation, writes the parameters of simulation
+to the file, and returns the file"""
+def new_sim_file(iaTitanRS, numSamples, intTime):
+    file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
+    
+    f = open("v4.1-t-"+file_str+".txt", "a")
+
+    # Write parameters of simulation
+    f.write(str(iaTitanRS)+" Saturn radii\n")
+    f.write(str(numSamples)+" samples\n")
+    f.write(str(intTime)+" million years\n")
+    f.write("Continuation of: none\n")
+
+    return f
+
+
+"""Creates a new file for a continued simulation, writes the parameters of simulation
+to the file, copies data from previous sim file, and returns the file"""
+def cont_sim_file(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD):
+    file_prev_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
+    file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
+
+    f_prev = open(r"v4.1-t-"+file_prev_str+".txt", "r")
+    f_new = open("v4.1-t-"+file_new_str+".txt", "a")
+    
+    # Write parameters of simulation
+    f_new.write(str(iaTitanRS)+" Saturn radii\n")
+    f_new.write(str(numSamples+numSamplesADD)+" samples\n")
+    f_new.write(str(intTime+intTimeADD)+" million years\n")
+    f_new.write("Continuation of: v4.1-t-"+file_prev_str+".txt\n")
+
+    # copy data from f_prev
+    f_prev.readline()
+    f_prev.readline()
+    f_prev.readline()
+    f_prev.readline()
+
+    for i in range(numSamples):
+        f_new.write(f_prev.readline())
+
+    return f_new
+
+
+"""Continues a previous simulation whose parameters are iaTitanRS, numSamples,
+and intTime, integrating for intTimeADD million more years and taking numSamplesADD
+more samples, appending new data to file. See integrate_sim description for
+format of output. Lastly, saves simulation"""
+def continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, file):
+    
+    rSat = 58232503./AU_TO_M # mean physical radius
+    file_prev_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
+    file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
+    
+    # reload previous simulation
+    sim = rebound.Simulation("v4.1-sim-"+file_prev_str+".bin")
+    rebx = reboundx.Extras(sim, "v4.1-simx-"+file_prev_str+".bin")
+    ps = sim.particles
+    sim_start_time = sim.t # current time in previous simulation
+
+    # Integrate
+    plotDT = intTimeADD*1000000./numSamplesADD
+    for i in range(1, numSamplesADD + 1):
+        sim.integrate(sim_start_time + i * plotDT)
+        # move to Saturn's frame of reference
+        sim.move_to_hel()
+        # write output
+        file.write(str(ps['Titan'].a/rSat)+"\t"+str(ps['Titan'].e)+"\t"+str(ps['Titan'].inc)+"\t")
+        # file.write(str(sun.e)+"\t")
+        file.write(str(ps['Titan'].pomega)+"\t"+str(ps['Sun'].l)+"\t")
+        file.write(str(sim.t)+"\n")
+
+    # remove old binary files of saved simulation
+    os.remove("v4.1-sim-"+file_prev_str+".bin")
+    os.remove("v4.1-simx-"+file_prev_str+".bin")
+
+    # save simulation
+    sim.save("v4.1-sim-"+file_new_str+".bin")
+    rebx.save("v4.1-simx-"+file_new_str+".bin")
+
+    # sim.cite()
+
+
 """Integrates the system starting from a = iaTitanRS saturn radii for intTime 
-years and prints numSamples data points to file, 
+million years and prints numSamples data points to file, 
 each on one line in the following format:
 
 'a (RS)'[tab]'e'[tab]'i (rad)'[tab]'longitude of pericenter'[tab]
 'mean longitude of Sun'[tab]'e of Sun'[tab]'current time in simulation'
 
 Lastly, saves simulation"""
-def integrate_sim(numSamples, iaTitanRS, intTime, file):
+def integrate_sim(iaTitanRS, numSamples, intTime, file):
 
     # Check accuracy of all the following constants
     # Saturn constants
@@ -162,7 +246,7 @@ def integrate_sim(numSamples, iaTitanRS, intTime, file):
     ps['Saturn'].params["Omega"] = omegaSat*YR_TO_SEC # rad/yr
 
     # Integrate
-    plotDT = intTime/numSamples
+    plotDT = intTime*1000000./numSamples
     for i in range(numSamples):
         sim.integrate(i * plotDT)
         # move to Saturn's frame of reference
@@ -173,8 +257,12 @@ def integrate_sim(numSamples, iaTitanRS, intTime, file):
         file.write(str(ps['Titan'].pomega)+"\t"+str(ps['Sun'].l)+"\t")
         file.write(str(sim.t)+"\n")
 
-    # sim.cite()
     # save simulation
+    file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
+    sim.save("v4.1-sim-"+file_str+".bin")
+    rebx.save("v4.1-simx-"+file_str+".bin")
+
+    # sim.cite()
 
 
 """Opens file, writes command line arguments, starts timer, 
@@ -183,34 +271,60 @@ of simulation"""
 def main():
 
     # Parse command-line arguments
-    numSamples = int(sys.argv[1])
+    continuation = int(sys.argv[1]) # 0 if new sim, 1 if continuing a previous sim
     iaTitanRS = float(sys.argv[2])
-    intTime = float(sys.argv[3]) # total time to integrate, in myrs
+    numSamples = int(sys.argv[3])
+    intTime = float(sys.argv[4]) # total time to integrate, in myrs
+
+    # Check validity of command-line arguments
+    if (continuation != 0 and continuation != 1):
+        raise Exception("First command-line argument must be 0 or 1: 0 if it is "
+        +"a new simulation, 1 if it is a continuation of a previous simuation")
+    if (continuation == 1):
+        file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
+        if (not os.path.exists("v4.1-sim-"+file_str+".bin")) or (not os.path.exists("v4.1-simx-"+file_str+".bin")):
+            raise Exception("One or more binary files for previous simulation to be continued does not exist")
+        if not os.path.exists("v4.1-t-"+file_str+".txt"):
+            raise Exception("Data file for previous simulation to be continued does not exist")
+
+    # if continuation, 2 more command-line args
+    if (continuation == 1):
+        numSamplesADD = int(sys.argv[5]) # additional number of samples
+        intTimeADD = float(sys.argv[6]) # additional time to integrate, in myrs
+        # if numSamplesADD is 0, use same ratio of samples as previous simulation
+        if (numSamplesADD == 0):
+            numSamplesADD = int(intTimeADD*numSamples/intTime)
 
     # open file
-    f = open("v4t-"+str(numSamples)+"s-"+str(iaTitanRS)+"rs-"+str(intTime)+"myrs.txt", "a")
-
-    # Write parameters of simulation
-    f.write(str(numSamples)+" samples\n")
-    f.write(str(iaTitanRS)+" Saturn radii\n")
-    f.write(str(intTime)+" million years\n")
+    if (continuation == 0):
+        f = new_sim_file(iaTitanRS, numSamples, intTime)
+    else:
+        f = cont_sim_file(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD)
 
     # start timer
     start_time = time.time()
 
     # call integration method
-    integrate_sim(numSamples, iaTitanRS, intTime*1000000., f)
+    if (continuation == 0):
+        integrate_sim(iaTitanRS, numSamples, intTime, f)
+    else:
+        continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, f)
 
-    # Write running time
+    # Write running time (if continuation, only running time for added integration)
     totTimeSec = time.time() - start_time
     numDays = int(totTimeSec) // (3600*24)
     numHours = int(totTimeSec) // 3600
     numMins = int(totTimeSec % 3600) // 60
     numSecs = (totTimeSec % 3600) % 60
-    f.write("Running time: "+str(numDays)+ " days "+str(numHours)+ " hours "+str(numMins)+" minutes "+str(numSecs)+" seconds.\n")
+    if (continuation == 1):
+        f.write("ADDED running time: "+str(numDays)+ " days "+str(numHours)+ " hours "+str(numMins)+" minutes "+str(numSecs)+" seconds.\n")
+    else:
+        f.write("Running time: "+str(numDays)+ " days "+str(numHours)+ " hours "+str(numMins)+" minutes "+str(numSecs)+" seconds.\n")
 
     # close the file
     f.close()
+
+
 
 # Call main()
 main()
