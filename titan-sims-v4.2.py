@@ -1,4 +1,8 @@
-"""Description:
+"""
+titan-sims-v4.2.py
+Author: Henry Yuan
+
+Description:
 Integrates the Titan-Saturn-Sun system as Titan migrates
 through the evection resonance. Includes Saturn's obliquity and the tidal
 effects on Saturn and Titan, but not on the Sun.
@@ -81,7 +85,7 @@ to the file, and returns the file"""
 def new_sim_file(iaTitanRS, numSamples, intTime):
     file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
     
-    f = open("v4.1-t-"+file_str+".txt", "a")
+    f = open("v4.2-"+file_str+".txt", "a")
 
     # Write parameters of simulation
     f.write(str(iaTitanRS)+" Saturn radii\n")
@@ -98,14 +102,14 @@ def cont_sim_file(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD):
     file_prev_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
     file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
 
-    f_prev = open(r"v4.1-t-"+file_prev_str+".txt", "r")
-    f_new = open("v4.1-t-"+file_new_str+".txt", "a")
+    f_prev = open(r"v4.2-"+file_prev_str+".txt", "r")
+    f_new = open("v4.2-"+file_new_str+".txt", "a")
     
     # Write parameters of simulation
     f_new.write(str(iaTitanRS)+" Saturn radii\n")
     f_new.write(str(numSamples+numSamplesADD)+" samples\n")
     f_new.write(str(intTime+intTimeADD)+" million years\n")
-    f_new.write("Continuation of: v4.1-t-"+file_prev_str+".txt\n")
+    f_new.write("Continuation of: v4.2-"+file_prev_str+".txt\n")
 
     # copy data from f_prev
     f_prev.readline()
@@ -284,7 +288,7 @@ def main():
         file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
         if (not os.path.exists("v4.1-sim-"+file_str+".bin")) or (not os.path.exists("v4.1-simx-"+file_str+".bin")):
             raise Exception("One or more binary files for previous simulation to be continued does not exist")
-        if not os.path.exists("v4.1-t-"+file_str+".txt"):
+        if not os.path.exists("v4.2-"+file_str+".txt"):
             raise Exception("Data file for previous simulation to be continued does not exist")
 
     # if continuation, 2 more command-line args
