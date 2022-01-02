@@ -134,8 +134,8 @@ def continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, file
     file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
     
     # reload previous simulation
-    sim = rebound.Simulation("v4.1-sim-"+file_prev_str+".bin")
-    rebx = reboundx.Extras(sim, "v4.1-simx-"+file_prev_str+".bin")
+    sim = rebound.Simulation("v4.2-sim-"+file_prev_str+".bin")
+    rebx = reboundx.Extras(sim, "v4.2-simx-"+file_prev_str+".bin")
     ps = sim.particles
     sim_start_time = sim.t # current time in previous simulation
 
@@ -152,12 +152,12 @@ def continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, file
         file.write(str(sim.t)+"\n")
 
     # remove old binary files of saved simulation
-    os.remove("v4.1-sim-"+file_prev_str+".bin")
-    os.remove("v4.1-simx-"+file_prev_str+".bin")
+    os.remove("v4.2-sim-"+file_prev_str+".bin")
+    os.remove("v4.2-simx-"+file_prev_str+".bin")
 
     # save simulation
-    sim.save("v4.1-sim-"+file_new_str+".bin")
-    rebx.save("v4.1-simx-"+file_new_str+".bin")
+    sim.save("v4.2-sim-"+file_new_str+".bin")
+    rebx.save("v4.2-simx-"+file_new_str+".bin")
 
     # sim.cite()
 
@@ -263,8 +263,8 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
 
     # save simulation
     file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
-    sim.save("v4.1-sim-"+file_str+".bin")
-    rebx.save("v4.1-simx-"+file_str+".bin")
+    sim.save("v4.2-sim-"+file_str+".bin")
+    rebx.save("v4.2-simx-"+file_str+".bin")
 
     # sim.cite()
 
@@ -286,7 +286,7 @@ def main():
         +"a new simulation, 1 if it is a continuation of a previous simuation")
     if (continuation == 1):
         file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
-        if (not os.path.exists("v4.1-sim-"+file_str+".bin")) or (not os.path.exists("v4.1-simx-"+file_str+".bin")):
+        if (not os.path.exists("v4.2-sim-"+file_str+".bin")) or (not os.path.exists("v4.2-simx-"+file_str+".bin")):
             raise Exception("One or more binary files for previous simulation to be continued does not exist")
         if not os.path.exists("v4.2-"+file_str+".txt"):
             raise Exception("Data file for previous simulation to be continued does not exist")
