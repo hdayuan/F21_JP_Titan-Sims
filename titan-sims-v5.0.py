@@ -23,14 +23,6 @@ of additional samples, additional integration time in millions of years}
 
 *** Units are AU, yr, and MSun (and SI for other measurements) 
 unless otherwise specified ***
-
-TO-DO:
--Make sure I set up Titan's tides correctly
--Check values of k2 for Saturn and Titan
--how to set obliquity of saturn/inclination of Titan?
--use different equatorial radius for Saturn?
--figure out how sim.cite() works and whether to use it
--see JPNotes doc and JP_introduction doc for other questions/to-dos
 """
 
 
