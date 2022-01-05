@@ -41,8 +41,6 @@ YR_TO_SEC = 365.25*24.*3600. # seconds in a year
 """Calculates tau (yrs) for constant time lag for a body with spin rate omega
 (rad/sec), a satellite orbiting with mean motion n (rad/sec), tidal Q factor Q"""
 def time_lag_tau(n, omega, Q):
-    if n == omega:
-        return 0
     return 1./(2.*Q*np.abs(omega-n))/YR_TO_SEC
 
 
@@ -78,7 +76,7 @@ to the file, and returns the file"""
 def new_sim_file(iaTitanRS, numSamples, intTime):
     file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
     
-    f = open("v4.2-"+file_str+".txt", "a")
+    f = open("v4.3-"+file_str+".txt", "a")
 
     # Write parameters of simulation
     f.write(str(iaTitanRS)+" Saturn radii\n")
@@ -95,14 +93,14 @@ def cont_sim_file(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD):
     file_prev_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
     file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
 
-    f_prev = open(r"v4.2-"+file_prev_str+".txt", "r")
-    f_new = open("v4.2-"+file_new_str+".txt", "a")
+    f_prev = open(r"v4.3-"+file_prev_str+".txt", "r")
+    f_new = open("v4.3-"+file_new_str+".txt", "a")
     
     # Write parameters of simulation
     f_new.write(str(iaTitanRS)+" Saturn radii\n")
     f_new.write(str(numSamples+numSamplesADD)+" samples\n")
     f_new.write(str(intTime+intTimeADD)+" million years\n")
-    f_new.write("Continuation of: v4.2-"+file_prev_str+".txt\n")
+    f_new.write("Continuation of: v4.3-"+file_prev_str+".txt\n")
 
     # copy data from f_prev
     f_prev.readline()
@@ -127,8 +125,8 @@ def continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, file
     file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
     
     # reload previous simulation
-    sim = rebound.Simulation("v4.2-sim-"+file_prev_str+".bin")
-    rebx = reboundx.Extras(sim, "v4.2-simx-"+file_prev_str+".bin")
+    sim = rebound.Simulation("v4.3-sim-"+file_prev_str+".bin")
+    rebx = reboundx.Extras(sim, "v4.3-simx-"+file_prev_str+".bin")
     ps = sim.particles
     sim_start_time = sim.t # current time in previous simulation
 
@@ -145,12 +143,12 @@ def continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, file
         file.write(str(sim.t)+"\n")
 
     # remove old binary files of saved simulation
-    os.remove("v4.2-sim-"+file_prev_str+".bin")
-    os.remove("v4.2-simx-"+file_prev_str+".bin")
+    os.remove("v4.3-sim-"+file_prev_str+".bin")
+    os.remove("v4.3-simx-"+file_prev_str+".bin")
 
     # save simulation
-    sim.save("v4.2-sim-"+file_new_str+".bin")
-    rebx.save("v4.2-simx-"+file_new_str+".bin")
+    sim.save("v4.3-sim-"+file_new_str+".bin")
+    rebx.save("v4.3-simx-"+file_new_str+".bin")
 
     # sim.cite()
 
@@ -170,26 +168,20 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
     mSat = 0.0002857 # mass
     aSat = 9.5549 # semi-major axis
     eSat = 0.0565 # eccentricity
-    # reqSat = 60268000./AU_TO_M # equatorial radius--need this?
     rSat = 58232503./AU_TO_M # mean physical radius
     oSat = 26.7 * np.pi / 180. # obliquity
     j2Sat = 16298e-6 # J2 (Murray and Dermott p 531)
-    k2Sat = 0.341 # Love number *** CHECK THIS ***
+    k2Sat = 0.341 # from Cuk et al. 2016
     omegaSat = 2*np.pi/(10.656*3600) # spin rate (*** rad/sec ***)
     ageSat = 4.503e9 # age
-
-    # Jupiter Constants
-    # mJup = (1.898e+27)/M_SUN
-    # aJup = (778.570e+9)/AU_TO_M
-    # eJup = 0.0489
 
     # Titan constants
     mTitan = 0.0000000676319759 # mass
     aTitan = 0.008167696467 # modern-day semi-major axis
     eTitan = 0.001 # initial eccentricity
     rTitan = 0.04421567543 * rSat # radius
-    k2Titan = 0.15 # Love number *** CHECK THIS ***
-    QTitan = 100. # Estimated tidal Q factor
+    k2Titan = 0.15 # Love number (calculated from Murray & Dermott p 173)
+    QTitan = 100. # Estimated tidal Q factor (Murray & Dermott p 173)
 
     # more constants
     iaTitan = iaTitanRS * rSat  # starting semi-major axis of Titan
@@ -203,17 +195,15 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
     sim = rebound.Simulation()
     sim.units = ('AU', 'yr', 'MSun')
     sim.integrator = "whfast"
-    sim.dt = (1./20.) * perTitan # initial time step = 1/20 * shortest orbital period
+    sim.dt = (1./20.) * perTitan # time step = 1/20 * shortest orbital period
 
-    # add Saturn, Titan, Sun, and Jupiter (what inclination?)
+    # add Saturn, Titan, and Sun
     saturn = rebound.Particle(m=mSat, hash='Saturn')
     sim.add(saturn)
     titan = rebound.Particle(sim, primary=saturn, m=mTitan, a=iaTitan, e=eTitan, hash='Titan')
     sim.add(titan)
     sun = rebound.Particle(sim, primary=saturn, m=1., a=aSat, e=eSat, inc=oSat, hash='Sun')
     sim.add(sun)
-    # jupiter = rebound.Particle(sim, primary=sun, m=mJup, a=aJup, e=eJup, hash='Jupiter')
-    # sim.add(jupiter)
 
     # Initiate reboundx
     rebx = reboundx.Extras(sim)
@@ -232,7 +222,7 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
     # Tidal forces of Titan
     ps['Titan'].r = rTitan # AU
     ps['Titan'].params["tctl_k2"] = k2Titan
-    ps['Titan'].params["tctl_tau"] = time_lag_tau(nTitan, omegaTitan, QTitan) # yrs
+    ps['Titan'].params["tctl_tau"] = time_lag_tau(nTitan, 0., QTitan) # yrs
     ps['Titan'].params["Omega"] = omegaTitan*YR_TO_SEC # rad/yr
 
     # Tidal forces of Saturn
@@ -250,14 +240,13 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
         sim.move_to_hel()
         # write output
         file.write(str(ps['Titan'].a/rSat)+"\t"+str(ps['Titan'].e)+"\t"+str(ps['Titan'].inc)+"\t")
-        # file.write(str(sun.e)+"\t")
         file.write(str(ps['Titan'].pomega)+"\t"+str(ps['Sun'].l)+"\t")
         file.write(str(sim.t)+"\n")
 
     # save simulation
     file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
-    sim.save("v4.2-sim-"+file_str+".bin")
-    rebx.save("v4.2-simx-"+file_str+".bin")
+    sim.save("v4.3-sim-"+file_str+".bin")
+    rebx.save("v4.3-simx-"+file_str+".bin")
 
     # sim.cite()
 
@@ -279,9 +268,9 @@ def main():
         +"a new simulation, 1 if it is a continuation of a previous simuation")
     if (continuation == 1):
         file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
-        if (not os.path.exists("v4.2-sim-"+file_str+".bin")) or (not os.path.exists("v4.2-simx-"+file_str+".bin")):
+        if (not os.path.exists("v4.3-sim-"+file_str+".bin")) or (not os.path.exists("v4.3-simx-"+file_str+".bin")):
             raise Exception("One or more binary files for previous simulation to be continued does not exist")
-        if not os.path.exists("v4.2-"+file_str+".txt"):
+        if not os.path.exists("v4.3-"+file_str+".txt"):
             raise Exception("Data file for previous simulation to be continued does not exist")
 
     # if continuation, 2 more command-line args

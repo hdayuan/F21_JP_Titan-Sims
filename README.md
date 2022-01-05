@@ -1,4 +1,9 @@
 # F21_JP_Titan-Sims
+
+VERSION NOTES:
+
+4.2-->4.3 fixed Titan's tidal forces, eccentricity damping should work.
+3 Migration force with inclination
  
 TO-DO LIST:
 
@@ -13,8 +18,6 @@ To-do in writing:
 
 -redo tctl implementation paper citation?
 -citations for other implementation papers
--read Cuk about Mimas limit on Q
--Describe what is Q--see email
 -redo intro/make sure not plagiarizing adviser
 
 
@@ -22,11 +25,6 @@ QUESTIONS FOR ADVISER:
 
 Questions about Code:
 
--Eccentricity oscillations:
-    -How to set obliquity of Saturn when adding Jupiter if heliocentric
-    -Try artificial eccentricity oscillations?
--Titan's tides correct? What does a time lag mean for something that is tidally locked?
--Use different equatorial radius for Saturn? vs avrg radius
 -Run with different timescales?
 -Run with different initial eccentricities?
 -try with 0 initial eccentricity?
@@ -35,10 +33,8 @@ Questions about Code:
 Questions about Writing:
 
 -What is the actual time-lag parameter?
--What is Q?
 -Honor Code?
 -include adviser in header?
--Should I include the exponential migration simulations and explain that too in numerical methods?
 -introduction
 
 
