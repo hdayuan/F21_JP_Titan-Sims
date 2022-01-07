@@ -1,10 +1,20 @@
 # F21_JP_Titan-Sims
 
+FILES TO DELETE:
+
+v4.3 8.21 sim saves
+v3 8.21 sim saves
+all v4.2??
+v5.0 sim saves
+
+
 VERSION NOTES:
 
 4.2-->4.3 fixed Titan's tidal forces, eccentricity damping should work.
 3 Migration force with inclination
  
+
+
 TO-DO LIST:
 
 To-do in code:
@@ -24,6 +34,8 @@ To-do in writing:
 QUESTIONS FOR ADVISER:
 
 Questions about Code:
+
+-sign of de/dt???
 
 -Run with different timescales?
 -Run with different initial eccentricities?
