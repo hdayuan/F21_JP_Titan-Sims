@@ -60,7 +60,6 @@ def main(ia_titanRS, simTime, eTitan, incTitan):
     # Titan constants
     mTitan = 0.0000000676319759 # mass
     aTitan = 0.008167696467 # modern-day semi-major axis
-    eTitan = 0.001 # initial eccentricity
     rTitan = 0.04421567543 * rSat # radius
     k2Titan = 0.15 # Love number (calculated from Murray & Dermott p 173)
     QTitan = 100. # Estimated tidal Q factor (Murray & Dermott p 173)
@@ -136,7 +135,7 @@ def main(ia_titanRS, simTime, eTitan, incTitan):
 
     print(ps['Titan'].e)
 
-    numSteps = simTime*1000000./sim.dt
+    """numSteps = simTime*1000000./sim.dt
     e = eTitan
     e_lim = e
     a = iaTitan*AU_TO_M
@@ -158,7 +157,7 @@ def main(ia_titanRS, simTime, eTitan, incTitan):
         e_lim = e_lim+(e_dot_lim*sim.dt*YR_TO_SEC)
 
     print(e)
-    print(e_lim)
+    print(e_lim)"""
 
 # Parse command-line arguments
 simTime = float(sys.argv[1]) # myr

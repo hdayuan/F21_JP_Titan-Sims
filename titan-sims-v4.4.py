@@ -1,15 +1,16 @@
 """
-titan-sims-v4.3.py
+titan-sims-v4.4.py
 Author: Henry Yuan
 
 Description:
-Integrates the Titan-Saturn-Sun system as Titan migrates
+Integrates the Iapetus-Titan-Saturn-Sun system as Titan migrates
 through the evection resonance. Includes Saturn's obliquity and the tidal
-effects on Saturn and Titan, but not on the Sun.
+effects on Saturn and Titan, but not on the Sun. Includes Iapetus, to see
+if its inclination is affected.
 
 To run:
 
-python3 Titan-tides-sims.py [continuation?] [initial a] [number of samples]
+python3 titan-sims-v4.4.py [continuation?] [initial a] [number of samples]
 [total integration time] {[number of additional samples]
 [additional integration time]}
 
@@ -76,7 +77,7 @@ to the file, and returns the file"""
 def new_sim_file(iaTitanRS, numSamples, intTime):
     file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
     
-    f = open("v4.3-"+file_str+".txt", "a")
+    f = open("v4.4-"+file_str+".txt", "a")
 
     # Write parameters of simulation
     f.write(str(iaTitanRS)+" Saturn radii\n")
@@ -93,14 +94,14 @@ def cont_sim_file(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD):
     file_prev_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
     file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
 
-    f_prev = open(r"v4.3-"+file_prev_str+".txt", "r")
-    f_new = open("v4.3-"+file_new_str+".txt", "a")
+    f_prev = open(r"v4.4-"+file_prev_str+".txt", "r")
+    f_new = open("v4.4-"+file_new_str+".txt", "a")
     
     # Write parameters of simulation
     f_new.write(str(iaTitanRS)+" Saturn radii\n")
     f_new.write(str(numSamples+numSamplesADD)+" samples\n")
     f_new.write(str(intTime+intTimeADD)+" million years\n")
-    f_new.write("Continuation of: v4.3-"+file_prev_str+".txt\n")
+    f_new.write("Continuation of: v4.4-"+file_prev_str+".txt\n")
 
     # copy data from f_prev
     f_prev.readline()
@@ -125,8 +126,8 @@ def continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, file
     file_new_str = str(iaTitanRS)+"rs-"+str(numSamples+numSamplesADD)+"s-"+str(intTime+intTimeADD)+"myrs"
     
     # reload previous simulation
-    sim = rebound.Simulation("v4.3-sim-"+file_prev_str+".bin")
-    rebx = reboundx.Extras(sim, "v4.3-simx-"+file_prev_str+".bin")
+    sim = rebound.Simulation("v4.4-sim-"+file_prev_str+".bin")
+    rebx = reboundx.Extras(sim, "v4.4-simx-"+file_prev_str+".bin")
     ps = sim.particles
     sim_start_time = sim.t # current time in previous simulation
 
@@ -138,17 +139,18 @@ def continue_sim(iaTitanRS, numSamples, intTime, numSamplesADD, intTimeADD, file
         sim.move_to_hel()
         # write output
         file.write(str(ps['Titan'].a/rSat)+"\t"+str(ps['Titan'].e)+"\t"+str(ps['Titan'].inc)+"\t")
-        # file.write(str(sun.e)+"\t")
         file.write(str(ps['Titan'].pomega)+"\t"+str(ps['Sun'].l)+"\t")
+        file.write(str(ps['Iapetus'].a/rSat)+"\t"+str(ps['Iapetus'].e)+"\t")
+        file.write(str(ps['Iapetus'].inc))
         file.write(str(sim.t)+"\n")
 
     # remove old binary files of saved simulation
-    os.remove("v4.3-sim-"+file_prev_str+".bin")
-    os.remove("v4.3-simx-"+file_prev_str+".bin")
+    os.remove("v4.4-sim-"+file_prev_str+".bin")
+    os.remove("v4.4-simx-"+file_prev_str+".bin")
 
     # save simulation
-    sim.save("v4.3-sim-"+file_new_str+".bin")
-    rebx.save("v4.3-simx-"+file_new_str+".bin")
+    sim.save("v4.4-sim-"+file_new_str+".bin")
+    rebx.save("v4.4-simx-"+file_new_str+".bin")
 
     # sim.cite()
 
@@ -158,7 +160,8 @@ million years and prints numSamples data points to file,
 each on one line in the following format:
 
 'a (RS)'[tab]'e'[tab]'i (rad)'[tab]'longitude of pericenter'[tab]
-'mean longitude of Sun'[tab]'e of Sun'[tab]'current time in simulation'
+'mean longitude of Sun'[tab]'Iapetus a'
+[tab]'Iapetus e'[tab]'Iapetus i'[tab]'current time in simulation'
 
 Lastly, saves simulation"""
 def integrate_sim(iaTitanRS, numSamples, intTime, file):
@@ -183,6 +186,12 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
     k2Titan = 0.15 # Love number (calculated from Murray & Dermott p 173)
     QTitan = 100. # Estimated tidal Q factor (Murray & Dermott p 173)
 
+    # Iapetus constants
+    mIap = 1.806e21 / M_SUN # mass
+    aIap = 3561000000. / AU_TO_M # modern-day semi-major axis
+
+    print(aIap/rSat)
+
     # more constants
     iaTitan = iaTitanRS * rSat  # starting semi-major axis of Titan
     aResRS = evection_a(mSat, rSat, j2Sat, aSat) # Titan's semi-major axis at resonance in units of saturn radii
@@ -191,17 +200,23 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
     perTitan = get_period(nTitan) # period of Titan at resonance
     timescale = get_timescale(aResRS*rSat, aTitan, ageSat) # migration timescale at resonance
 
+    t_start = ageSat * (iaTitan/aTitan)**3
+    iaIap = aIap * (t_start/ageSat)**(1./3.) # initial semi-major axis of Iapetus
+    print(iaIap/rSat)
+
     # Initialize rebound simulation
     sim = rebound.Simulation()
     sim.units = ('AU', 'yr', 'MSun')
     sim.integrator = "whfast"
     sim.dt = (1./20.) * perTitan # time step = 1/20 * shortest orbital period
 
-    # add Saturn, Titan, and Sun
+    # add Saturn, Titan, Iapetus, and Sun
     saturn = rebound.Particle(m=mSat, hash='Saturn')
     sim.add(saturn)
     titan = rebound.Particle(sim, primary=saturn, m=mTitan, a=iaTitan, e=eTitan, hash='Titan')
     sim.add(titan)
+    iapetus = rebound.Particle(sim, primary=saturn, m=mIap, a=iaIap, e=0, hash='Iapetus')
+    sim.add(iapetus)
     sun = rebound.Particle(sim, primary=saturn, m=1., a=aSat, e=eSat, inc=oSat, hash='Sun')
     sim.add(sun)
 
@@ -241,12 +256,14 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
         # write output
         file.write(str(ps['Titan'].a/rSat)+"\t"+str(ps['Titan'].e)+"\t"+str(ps['Titan'].inc)+"\t")
         file.write(str(ps['Titan'].pomega)+"\t"+str(ps['Sun'].l)+"\t")
+        file.write(str(ps['Iapetus'].a/rSat)+"\t"+str(ps['Iapetus'].e)+"\t")
+        file.write(str(ps['Iapetus'].inc))
         file.write(str(sim.t)+"\n")
 
     # save simulation
     file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
-    sim.save("v4.3-sim-"+file_str+".bin")
-    rebx.save("v4.3-simx-"+file_str+".bin")
+    sim.save("v4.4-sim-"+file_str+".bin")
+    rebx.save("v4.4-simx-"+file_str+".bin")
 
     # sim.cite()
 
@@ -268,9 +285,9 @@ def main():
         +"a new simulation, 1 if it is a continuation of a previous simuation")
     if (continuation == 1):
         file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs"
-        if (not os.path.exists("v4.3-sim-"+file_str+".bin")) or (not os.path.exists("v4.3-simx-"+file_str+".bin")):
+        if (not os.path.exists("v4.4-sim-"+file_str+".bin")) or (not os.path.exists("v4.4-simx-"+file_str+".bin")):
             raise Exception("One or more binary files for previous simulation to be continued does not exist")
-        if not os.path.exists("v4.3-"+file_str+".txt"):
+        if not os.path.exists("v4.4-"+file_str+".txt"):
             raise Exception("Data file for previous simulation to be continued does not exist")
 
     # if continuation, 2 more command-line args
