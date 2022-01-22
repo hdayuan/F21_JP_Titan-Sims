@@ -257,7 +257,7 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
         file.write(str(ps['Titan'].a/rSat)+"\t"+str(ps['Titan'].e)+"\t"+str(ps['Titan'].inc)+"\t")
         file.write(str(ps['Titan'].pomega)+"\t"+str(ps['Sun'].l)+"\t")
         file.write(str(ps['Iapetus'].a/rSat)+"\t"+str(ps['Iapetus'].e)+"\t")
-        file.write(str(ps['Iapetus'].inc))
+        file.write(str(ps['Iapetus'].inc)+"\t")
         file.write(str(sim.t)+"\n")
 
     # save simulation
