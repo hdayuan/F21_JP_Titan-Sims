@@ -183,14 +183,12 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
     aTitan = 0.008167696467 # modern-day semi-major axis
     eTitan = 0.001 # initial eccentricity
     rTitan = 0.04421567543 * rSat # radius
-    k2Titan = 0.15 # Love number (calculated from Murray & Dermott p 173)
+    k2Titan = 0.616 # Love number (Titan's Dynamic Love Number Implies Stably-Stratified Ocean)
     QTitan = 100. # Estimated tidal Q factor (Murray & Dermott p 173)
 
     # Iapetus constants
     mIap = 1.806e21 / M_SUN # mass
     aIap = 3561000000. / AU_TO_M # modern-day semi-major axis
-
-    print(aIap/rSat)
 
     # more constants
     iaTitan = iaTitanRS * rSat  # starting semi-major axis of Titan
@@ -202,7 +200,6 @@ def integrate_sim(iaTitanRS, numSamples, intTime, file):
 
     t_start = ageSat * (iaTitan/aTitan)**3
     iaIap = aIap * (t_start/ageSat)**(1./3.) # initial semi-major axis of Iapetus
-    print(iaIap/rSat)
 
     # Initialize rebound simulation
     sim = rebound.Simulation()
