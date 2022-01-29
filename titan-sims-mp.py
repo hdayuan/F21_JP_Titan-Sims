@@ -20,10 +20,11 @@ of additional samples, additional integration time in millions of years}
 *** Units are AU, yr, and MSun (and SI for other measurements) 
 unless otherwise specified ***
 
-Trials
+Trials: 0 -> 0.05 ... 19 -> 1.00
 """
 
 import multiprocessing as mp
+import os
 import rebound
 import reboundx
 import numpy as np
@@ -72,16 +73,18 @@ def get_timescale(a, aCurr, age):
 
 """Creates a new file for a new simulation, writes the parameters of simulation
 to the file, and returns the file"""
-def new_sim_file(iaTitanRS, numSamples, intTime, k2Titan):
-    file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs-k"+str(k2Titan)
+def new_sim_file(iaTitanRS, numSamples, intTime, trial):
+    file_str = str(iaTitanRS)+"rs-"+str(numSamples)+"s-"+str(intTime)+"myrs-t"+str(trial)
+    if os.path.exists("vk2-"+file_str+".txt"):
+        raise Exception("File already exists")
     
-    f = open("v4.4-"+file_str+".txt", "a")
+    f = open("vk2-"+file_str+".txt", "a")
 
     # Write parameters of simulation
     f.write(str(iaTitanRS)+" Saturn radii\n")
     f.write(str(numSamples)+" samples\n")
     f.write(str(intTime)+" million years\n")
-    f.write("Titan's k2 = "+str(k2Titan)+"\n")
+    f.write("Titan's k2 = "+str(0.05+(trial*0.05))+"\n")
 
     return f
 
@@ -198,15 +201,13 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
 """Opens file, writes command line arguments, starts timer, 
 calls integration method, stops timer and writes real-time duration
 of simulation"""
-def run_sim(iaTitanRS, numSamples, intTime, trial):
+def run_sim(trial, iaTitanRS=8.2, numSamples=1000, intTime=20.0):
 
-    k2Titan = trial * 0.05
-    f = new_sim_file(iaTitanRS, numSamples, intTime, k2Titan)
+    k2Titan = 0.05 + (trial * 0.05)
+    f = new_sim_file(iaTitanRS, numSamples, intTime, trial)
 
     # start timer
     start_time = time.time()
-
-
 
     integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, f)
     
@@ -220,19 +221,19 @@ def run_sim(iaTitanRS, numSamples, intTime, trial):
 
     # close the file
     f.close()
-
+    
+    return totTimeSec
 
 
 # Call main()
 # Step 1: Init multiprocessing.Pool()
-numCPUs = mp.cpu_count()
-print(numCPUs)
-#pool = mp.Pool(numCPUs)
+numTrials = 20
+pool = mp.Pool(mp.cpu_count())
 
 # Step 2: `pool.apply` the `run_sim()`
-#results = [pool.apply(run_sim, args=(8.2, 4000, 20.0, trial)) for trial in numCPUs]
+results = pool.map(run_sim, [i for i in range(numTrials)])
 
 # Step 3: Don't forget to close
-#pool.close()    
+pool.close()
 
-#print(results[:10])
+print(results)
