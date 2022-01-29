@@ -10,9 +10,7 @@ if its inclination is affected.
 
 To run:
 
-python3 titan-sims-mp.py [continuation?] [initial a] [number of samples]
-[total integration time] {[number of additional samples]
-[additional integration time]}
+python3 titan-sims-mp.py
 
 Takes 4-6 command line arguments: continuation is 0 if new sim,
 1 if continuing previous sim, number of samples, initial semi-major axis of 
@@ -26,8 +24,6 @@ Trials
 """
 
 import multiprocessing as mp
-import sys
-import os
 import rebound
 import reboundx
 import numpy as np
@@ -230,6 +226,7 @@ def run_sim(iaTitanRS, numSamples, intTime, trial):
 # Call main()
 # Step 1: Init multiprocessing.Pool()
 numCPUs = mp.cpu_count()
+print(numCPUs)
 #pool = mp.Pool(numCPUs)
 
 # Step 2: `pool.apply` the `run_sim()`
