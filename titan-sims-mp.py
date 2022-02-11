@@ -122,6 +122,7 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
     # Iapetus constants
     mIap = 1.806e21 / M_SUN # mass
     aIap = 3561000000. / AU_TO_M # modern-day semi-major axis
+    iIap = 0.022091 # equilibrium inclination of Iapetus
 
     # more constants
     iaTitan = iaTitanRS * rSat  # starting semi-major axis of Titan
@@ -145,7 +146,7 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
     sim.add(saturn)
     titan = rebound.Particle(sim, primary=saturn, m=mTitan, a=iaTitan, e=eTitan, hash='Titan')
     sim.add(titan)
-    iapetus = rebound.Particle(sim, primary=saturn, m=mIap, a=iaIap, e=0, hash='Iapetus')
+    iapetus = rebound.Particle(sim, primary=saturn, m=mIap, a=iaIap, e=0, inc=iIap, hash='Iapetus')
     sim.add(iapetus)
     sun = rebound.Particle(sim, primary=saturn, m=1., a=aSat, e=eSat, inc=oSat, hash='Sun')
     sim.add(sun)
