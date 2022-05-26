@@ -78,13 +78,13 @@ def new_sim_file(iaTitanRS, numSamples, intTime, trial):
     if os.path.exists("vk2-"+file_str+".txt"):
         raise Exception("File already exists")
     
-    f = open("vk2-"+file_str+".txt", "a")
+    f = open("vk2.6-"+file_str+".txt", "a")
 
     # Write parameters of simulation
     f.write(str(iaTitanRS)+" Saturn radii\n")
     f.write(str(numSamples)+" samples\n")
     f.write(str(intTime)+" million years\n")
-    f.write("Titan's k2 = "+str(0.05+(trial*0.05))+"\n")
+    f.write("Titan's k2 = "+str(0.6)+"\n")
 
     return f
 
@@ -123,7 +123,10 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
     mIap = 1.806e21 / M_SUN # mass
     aIap = 3561000000. / AU_TO_M # modern-day semi-major axis
     iIap = 0.022091 # equilibrium inclination of Iapetus
-
+    # rIap = 734.7 * 1000 / AU_TO_M # radius
+    # k2Iap = 
+    # QIap = 
+    
     # more constants
     iaTitan = iaTitanRS * rSat  # starting semi-major axis of Titan
     aResRS = evection_a(mSat, rSat, j2Sat, aSat) # Titan's semi-major axis at resonance in units of saturn radii
@@ -134,6 +137,11 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
 
     t_start = ageSat * (iaTitan/aTitan)**3
     iaIap = aIap * (t_start/ageSat)**(1./3.) # initial semi-major axis of Iapetus
+    # ADDED
+    # nIap = mean_motion(mSat, iaIap) # mean motion of Iapetus at beginning of sim 
+    # # (assuming Iapetus doesn't migrate very far)
+    # omegaIap = nIap # spin rate of Iapetus, in rad/sec (same as nIap because tidally locked)
+
 
     # Initialize rebound simulation
     sim = rebound.Simulation()
@@ -171,6 +179,13 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
     ps['Titan'].params["tctl_tau"] = time_lag_tau(nTitan, 0., QTitan) # yrs
     ps['Titan'].params["Omega"] = omegaTitan*YR_TO_SEC # rad/yr
 
+    ## ADDED
+    # # Tidal forces of Iapetus
+    # ps['Iapetus'].r = rIap # AU
+    # ps['Iapetus'].params["tctl_k2"] = k2Iap
+    # ps['Iapetus'].params["tctl_tau"] = time_lag_tau(nIap, 0., QIap) # yrs
+    # ps['Iapetus'].params["Omega"] = omegaIap*YR_TO_SEC # rad/yr
+
     # Tidal forces of Saturn
     QSat = 3.*k2Sat*(mTitan/mSat)*nTitan*(timescale*YR_TO_SEC)*(1./aResRS)**5. # Q for Saturn based on timescale
     ps['Saturn'].r = rSat # AU
@@ -202,9 +217,9 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
 """Opens file, writes command line arguments, starts timer, 
 calls integration method, stops timer and writes real-time duration
 of simulation"""
-def run_sim(trial, iaTitanRS=8.2, numSamples=2500, intTime=60.0):
+def run_sim(trial, iaTitanRS=8.2, numSamples=2500, intTime=15.0):
 
-    k2Titan = 0.05 + (trial * 0.05)
+    k2Titan = 0.6
     f = new_sim_file(iaTitanRS, numSamples, intTime, trial)
 
     # start timer
@@ -228,7 +243,7 @@ def run_sim(trial, iaTitanRS=8.2, numSamples=2500, intTime=60.0):
 
 # Call main()
 # Step 1: Init multiprocessing.Pool()
-numTrials = 20
+numTrials = 10
 pool = mp.Pool(mp.cpu_count())
 
 # Step 2: `pool.apply` the `run_sim()`
