@@ -225,7 +225,7 @@ def run_sim(trial, iaTitanRS=8.2, numSamples=2500, intTime=15.0):
     # start timer
     start_time = time.time()
 
-    integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, f)
+    integrate_sim(iaTitanRS + (0.001 * trial), numSamples, intTime, k2Titan, f)
     
     # Write running time
     totTimeSec = time.time() - start_time
