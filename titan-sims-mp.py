@@ -217,7 +217,7 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
 """Opens file, writes command line arguments, starts timer, 
 calls integration method, stops timer and writes real-time duration
 of simulation"""
-def run_sim(trial, iaTitanRS=8.201, numSamples=3000, intTime=15.0):
+def run_sim(trial, iaTitanRS=8.205, numSamples=2000, intTime=2.0):
 
     k2Titan = 0.6
     f = new_sim_file(iaTitanRS, numSamples, intTime, trial)
@@ -243,7 +243,7 @@ def run_sim(trial, iaTitanRS=8.201, numSamples=3000, intTime=15.0):
 
 # Call main()
 # Step 1: Init multiprocessing.Pool()
-numTrials = 10
+numTrials = 1
 pool = mp.Pool(mp.cpu_count())
 
 # Step 2: `pool.apply` the `run_sim()`
