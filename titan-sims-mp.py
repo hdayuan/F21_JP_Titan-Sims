@@ -217,7 +217,7 @@ def integrate_sim(iaTitanRS, numSamples, intTime, k2Titan, file):
 """Opens file, writes command line arguments, starts timer, 
 calls integration method, stops timer and writes real-time duration
 of simulation"""
-def run_sim(trial, iaTitanRS=8.2, numSamples=2500, intTime=15.0):
+def run_sim(trial, iaTitanRS=8.201, numSamples=3000, intTime=15.0):
 
     k2Titan = 0.6
     f = new_sim_file(iaTitanRS, numSamples, intTime, trial)
